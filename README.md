@@ -3,7 +3,7 @@
 
 # Overview
 
-The `nullnest` repository provides a set of programs developed for constructing a **null model** of bipartite networks which constraints the degree sequences -on average-, as well as for measuring the degree of **nestedness** of bipartite networks using a large variety of metrics and then comparing this value against the null expectation. The programs included in this package were used in the works [Payrato2019](#references) and [preprint-Payrato2019](#references), where the interest reader will find more information about the characteristics, functioning and scope of both the null model and each nestedness metrics. 
+The `nullnest` repository provides a set of programs developed for constructing a **null model** of bipartite networks which constraints the degree sequences -on average-, along with the measurement of the degree of **nestedness** of bipartite networks using a large variety of metrics allowing for the comparison of this value against the null expectation. The programs included in this package were used in the works [Payrato2019](#references) and [preprint-Payrato2019](#references), where the interested reader will find more information about the characteristics, functioning and scope of both the null model and each nestedness metrics. 
 
 The package is divided into two main blocks. On the one hand, we provide a [program](#simulated-annealing) to compute the null model, for any bipartite network introduced by the user, which keeps the original degree sequence constant on average while maximizing the entropy of the null ensemble. We also give the ready-to-use results of the [null model](#probability-matrices) for an important number of real networks available online. On the other hand, the package contains the programs to measure the degree of nestedness of any network, measuring as well the first two moments of its null distribution, either by using [analytical](#analytical-nestedness-measures) expressions or by numerically [sampling](#sampled-nestedness-measures) the null ensemble. 
 
@@ -38,12 +38,12 @@ Each of the sections corresponds to one of the folders of the repository and pro
 
 # Examples 
 
-Various of the programs of the package share the same type of input/output files. We provide below the details of the content and format of these files. In all three cases, the index *i* stands for the index of the system studied, to be specified by the user. In this folder, we illustrate the format with a few examples files indexed by *i=0*.
+Several programs of the package share the same type of input/output files. We provide below the details of the content and format of these files. In all three cases, the index *i* stands for the index of the system studied, to be specified by the user. In this folder, we illustrate the format with a few examples files indexed by *i=0*.
 
 | File name | Description |
 | ---------- | ---------- |
-|  **matrix*i*ord.txt** | It contains the real bi-adjacency  *n x m* matrix of interactions, for which we intend to construct the particular null ensemble. Importantly, both rows and columns are ordered by decreasing degree, and interactions are binary (1's represent presence of interactions and 0's absences). Species with no interactions (zero degree) must be removed from the matrix before being used. Moreover, the matrix elements should be separated by spaces, without commas. |
-| **matrix*i*rand.txt** | It contains an *n x m* bi-adjacency matrix, representing the expected probabilities of interaction between nodes in the null ensemble. That is, each matrix element corresponds to the probability *p<sub>i,j</sub>* that node *i* from the row's guild interacts with node *j* from the column's guild. Matrix elements are separated by spaces, without commas. In section [Probability Matrices](#probability-matrices) we provide a large repository of these matrices calculated for 231 real networks. |
+|  **matrix*i*ord.txt** | It contains the real bi-adjacency  *n x m* interaction matrix, for which we intend to construct the particular null ensemble. Importantly, both rows and columns are ordered by decreasing degree, and interactions are binary (1's represent presence of interactions and 0's absences). Species with no interactions (zero degree) must be removed from the matrix before being used. Moreover, the matrix elements should be separated by spaces, without commas. |
+| **matrix*i*rand.txt** | It contains an *n x m* bi-adjacency matrix, representing the expected probabilities of interaction between nodes in the null ensemble. That is, each matrix element corresponds to the probability *p<sub>i,j</sub>* that node *i* from the row's guild interacts with node *j* from the column's guild. Matrix elements are separated by spaces, without commas. In section [Probability Matrices](#probability-matrices) we provide a large repository containing the probability matrices that allow to generate the random ensembles corresponding to 231 real networks. |
 | **general*i*.txt** | It contains the dimension of the bi-adjacency interaction matrices above: the first line contains *n*, the number of rows, while the second line contains *m*, the number of columns. |
 
 <br/><br/>
@@ -54,15 +54,15 @@ Various of the programs of the package share the same type of input/output files
 
 This folder contains a `FORTRAN90` program named `simulated_annealing.f90`. This program implements a null model based on the maximum entropy and maximum likelihood ensemble proposed by Squartini and Garlaschelli [(Squartini2011](#references)), and later extended to bipartite economic networks by Saracco et al. ([Saracco2015](#references)). Specifically, we require the degree sequences to be kept only in average, while the probability of finding a given network in the statistical ensemble is constructed using the Exponential random graph model. We follow the numerical implementation made in [Payrato2019](#references), where we applied this null model to the study of nestedness in ecological networks. For more details on the aim and construction of this null model we refer the interested reader to the summarized review in [Payrato2019](#references) or the extensive discussion in [Squartini2011](#references). 
 
-The program `simulated_annealing.f90` constructs the mentioned null model for a given bipartite network provided by the user, typically representing a real system. In particular, the program performs a pseudo-random search using simulated annealing in order to obtain the global maximum of the probability of finding the real degree sequences in the ensemble. This probability is determined by the Lagrange multipliers (one per node), which eventually define the corresponding null ensemble for the specific network under study. We adapt to our purpose and particular problem the code for simulated annealing developed by Goffe et al. ([Goffe1994](#references)), which is in turn an implementation of the algorithm proposed by Corana et al. ([Corana1987](#references)). The random number generator employed is the one by Toral and Chakrabarti ([Toral1993](#references)), included in the repository and named `dranxor.f90`.
+The program `simulated_annealing.f90` constructs the mentioned null model for a given bipartite network provided by the user, typically representing a real system. In particular, the program performs a pseudo-random search using simulated annealing in order to obtain the global maximum of the probability of finding the real degree sequences in the ensemble. This probability is determined by the Lagrange multipliers (in principle one per node), which eventually define the corresponding null ensemble for the specific network under study. We adapt to our purpose and particular problem the code for simulated annealing developed by Goffe et al. ([Goffe1994](#references)), which is in turn an implementation of the algorithm proposed by Corana et al. ([Corana1987](#references)). The random number generator employed is the one by Toral and Chakrabarti ([Toral1993](#references)), included in the repository and named `dranxor.f90`.
 
 Importantly, and compared to other implementations of the null model that can be found in the literature (see for example the [bicm](#https://github.com/tsakim/bicm) module), the `simulated_annealing.f90` program is specially concerned with finding the *global* maximum and hence avoiding getting trapped in local maxima. This means that it can be more computational demanding than alternative packages, but the optimization method is highly robust.
 
 In very general terms, the code we provide performs the following **tasks**:
 
 - First, it tackles the nodes with identical degree. This allows converting the actual optimization problem to an equivalent problem with smaller dimension, that this, having fewer variables to optimize. This reduction of dimensionality boosts both the accuracy and the efficiency of the global search.
-- Second, it performs a global optimization of the log-likelihood of finding the real degree sequences in the ensemble, by means of a pseudo-random search. The algorithm is characterized by accepting uphill moves as well as downhill moves following the Metropolis criteria. This non-deterministic approach ensures an exhaustive exploration of the search space and avoids getting trapped in local maximums. As a parameter named *temperature* decreases, the probability of accepting downhill moves declines and eventually the algorithm converges to the global maximum.
-- Finally, using the optimal Lagrange multipliers, it constructs the matrix of probability of interactions between species. This matrix and other outputs are produced as we specify below.
+- Second, it performs a global optimization of the log-likelihood of finding the real degree sequences in the ensemble, by means of a pseudo-random search. The algorithm is characterized by accepting uphill moves as well as downhill moves following the Metropolis criteria. This non-deterministic approach performs an exhaustive exploration of the search space and avoids getting trapped in local maximums. As a parameter named *temperature* decreases, the probability of accepting downhill moves declines and eventually the algorithm converges to the global maximum.
+- Finally, using the optimal Lagrange multipliers, it constructs the matrix containing the probability of interactions between nodes of different guilds. This matrix and other outputs are produced as we specify below.
 
 
 The following subsections aim at providing a practical guide for easily using the program. Though not indispensable for running the program, we highly recommend to the user to browse through the commented code to obtain a more detailed insight on how the program works. When using this program, please acknowledge the authors by citing [Payrato2019](#references), [Goffe1994](#references) and [Toral1993](#references).
@@ -74,7 +74,7 @@ The following subsections aim at providing a practical guide for easily using th
 The program takes two input files characterizing the real network we wish to randomize: the file **matrix*i*ord.txt**, containing its corresponding bi-adjacency matrix, and the file **general*i*.txt**, containing its dimension. The format of both files is detailed in section [Examples](#examples) of this documentation.
 
 
-Furthermore, the program also accepts two arguments by terminal: the integer index *i* identifying the real network for which we construct the null model, and the integer index *iloop* which identifies the particular run and permits performing different, independent runs. In the subsections below we specify how to introduce these arguments by terminal. 
+Furthermore, the program also accepts two arguments by command line: the integer index *i* identifying the real network for which we construct the null model, and the integer index *iloop* which identifies the particular run and permits performing different, independent runs. In the subsections below we specify how to introduce these arguments. 
 
 ### Output
 
@@ -125,13 +125,13 @@ Given the characteristics of the exhaustive search performed by simulated anneal
 
 In this folder we provide, for a large set of real networks, the main results of constructing the null model proposed by Squartini and Garlaschelli ([Squartini2011](#references)) and applied in [Payrato2019](#references) to bipartite ecological networks. In particular, the folder includes the matrix containing the probability of interaction among species in the null ensemble, corresponding to each real network in the dataset. 
 
-These probability matrices are given for 222 ecological networks belonging to the [Web of life](http://www.web-of-life.es/) public database, one ecological network by Burkle et al. ([Burkle2013](#references)) available in [dryad](https://datadryad.org/stash/dataset/doi:10.5061/dryad.rp321) and 8 economic networks studied in Hernández et al. ([Hernandez2018](#references)) available in [figshare](https://figshare.com/articles/data_used_for_article_zip/6080396). The purpose of this folder is to constitute a sort of library where the user can rapidly find the ready-to-use probability matrices corresponding to a large group of empirical networks, without need of running the randomizing algorithm.
+These probability matrices are given for 222 ecological networks belonging to the [Web of life](http://www.web-of-life.es/) public database, one ecological network by Burkle et al. ([Burkle2013](#references)) available in [dryad](https://datadryad.org/stash/dataset/doi:10.5061/dryad.rp321) and 8 economic networks studied in Hernández et al. ([Hernandez2018](#references)) available in [figshare](https://figshare.com/articles/data_used_for_article_zip/6080396). The purpose of this folder is to constitute a repository where the user can rapidly find the ready-to-use probability matrices corresponding to a large group of empirical networks, without need of running the randomizing algorithm.
 
 The folder contains three types of files: 
 
 | File name | Description |
 | ---------- | ---------- |
-| **references.csv** | It contains a legend to identify the real networks for which the null model is constructed. In detail, it provides the index *i* used to identify each network in our folder (column *Index*), followed by the name of the corresponding database (*Database*), the original name given to the network in that dataset (*ID*), the type of interaction composing the real network, and finally its respective reference. |
+| **references.csv** | It contains a legend to identify the real networks for which the null model is constructed. In detail, it provides the index *i* used to identify each network in our folder (column *Index*), followed by the name of the corresponding database (*Database*), the original name given to the network in that dataset (*ID*), the type of interaction composing the real network, and finally the corresponding reference. |
 | **matrix*i*rand.txt** | It contains a *n x m* matrix representing the average probability of interaction between the species of the two guilds, calculated over the maximum-likelihood and maximum-entropy null ensemble. Each matrix corresponds to one of the real networks, as coded in the file *references.csv*, which may be identified by its index *i*. The format of this file is specified in section [Examples](#examples) of this documentation. |
 | **general*i*.txt** | It contains the dimension of each bi-adjacency matrix written in matrix*i*rand.txt. Its format is specified in section [Examples](#examples) .|
 
@@ -142,7 +142,7 @@ Please take into account that in the construction of the null model, we take as 
 
 # Analytical Nestedness Measures
 
-This folder contains two programs that perform analytical measures of nestedness using a pair of nestedness metrics: the NODF ([Almeida2008](#references)) and the Spectral Radius ([Staniczenko2013](#references)). In particular, we implement the analytical expressions derived in [Payrato2019](#references) to calculate the first two moments of the nestedness distribution across a null ensemble.
+This folder contains two programs that perform analytical measures of nestedness using a pair of nestedness metrics: the NODF ([Almeida2008](#references)) and the Spectral Radius ([Staniczenko2013](#references)). In particular, we implement the analytical expressions derived in [Payrato2019](#references) that allow to directly calculate the first two moments of the nestedness ditribution across the ensemble without numerically sampling it.
 
 
 ## Analytic measures with NODF
@@ -219,7 +219,7 @@ Each program can be used to calculate the following quantities, using the corres
 2. The first two moments (average value and standard deviation) of the distribution of nestedness over the null ensemble corresponding to the given network. 
 
 
-In order to calculate the quantities in *ii*, the program permit numerically sampling the null ensemble. In detail, each program generates a number *Nsample* of null networks (decided by the user) by sampling the probability of interaction between nodes in the ensemble, and then computes the nestedness index on each null network as well as the resulting average and standard deviation. 
+In order to calculate the quantities in *ii*, the program performs a numerical sampling of the null ensemble. In detail, each program generates a number *Nsample* of null networks (decided by the user) by sampling the probability of interaction between nodes in the ensemble, and then computes the nestedness index on each null network as well as the resulting average and standard deviation. 
 
 Given that some of the programs may be computationally demanding, we recommend to perform a trial run using a small sample size (for example, *Nsample*=10²) to monitor the computational time, then run the program definitely using the wished sample size. We recommend a minimum sampling size of 10³ networks, while an interesting balance between accuracy and computational speed is *Nsample*=10⁴.
 
@@ -304,7 +304,7 @@ We provide an example script in the file **bash\_NODF.sh**.
 
 ## Discrepancy
 
-The program `discrepancy.R` measures the nestedness quantities detailed above using the discrepancy metrics ([Brualdi1999](#references)), in a standarized version which implies normalizing by the total number of links and rescaling it between 0 and 100. We also invert the metrics so that a larger value of the index means more nested.
+The program `discrepancy.R` measures the nestedness quantities detailed above using the discrepancy metrics ([Brualdi1999](#references)), in a standarized version which implies normalizing by the total number of links and rescaling it between 0 and 100. We also invert the metrics so that the larger the index the more nested the network.
 
  The program requires to have installed `R` ([RCore](#references)) as well as the following `R` packages: the `MASS` package ([massRpackage](#references)) and the `bipartite` package ([BipartitePackage](#references)). 
 
@@ -319,7 +319,7 @@ As output, the program produces the following quantities measured by the discrep
 
 ### Running the program
 
-To run the program on a network indexed by *i* and generate a sample size of a total of *Nsample* null networks, use the following command:
+To run the program on a network indexed by *i* and generate a sample containing *Nsample* null networks, use the following command:
 
     Rscript discrepancy.R i Nsample
 
@@ -339,7 +339,7 @@ The program takes the following input, defined as specified in section [Examples
 
 ### Output
 
-As output, the program produces the following quantities measured by the NIR metrics: the nestedness of the real network, the expected average in the ensemble and the standard deviation of the nestedness distribution in the null ensemble. It writes these three quantities in a file called **NIR.txt**.
+As output, the program produces the following quantities measured by the NIR metrics: the nestedness of the real network, the expected average and the standard deviation of the nestedness distribution in the null ensemble. It writes these three quantities in a file called **NIR.txt**.
 
 
 ### Running the program
@@ -363,16 +363,16 @@ The program `spectral_radius.R` measures the nestedness quantities detailed befo
 
 ### Input
 
-The program takes the following input, defined as specified in section [Examples](#examples)  of this documentation: the file **matrix*i*ord.txt**, which contains the real matrix to study, and the file **matrix*i*rand.txt**, which contains the probability matrix of interactions given by the null model.
+The program takes the following input, defined as specified in section [Examples](#examples) of this documentation: the file **matrix*i*ord.txt**, which contains the real matrix to study, and the file **matrix*i*rand.txt**, which contains the matrix of interaction probabilities given by the null model.
 
 ### Output
 
-As output, the program produces the following quantities measured by the spectral radius: the nestedness of the real network, the expected average in the ensemble and the standard deviation of the nestedness distribution in the null ensemble. It writes these three quantities in a file called **spectral\_radius.txt**.
+As output, the program produces the following quantities measured by the spectral radius: the nestedness of the real network, the expected average and the standard deviation of the nestedness distribution in the null ensemble. It writes these three quantities in a file called **spectral\_radius.txt**.
 
 
 ### Running the program
 
-To run the program on a network indexed by *i* and generate a sample size of a total of *Nsample* null networks, use the following command:
+To run the program on a network indexed by *i* and generate a sampling of *Nsample* null networks, use the following command:
 
     Rscript spectral_radius.R i Nsample
 
