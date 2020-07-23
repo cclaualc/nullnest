@@ -389,7 +389,7 @@ Codes by Clàudia Payrató Borràs (you may find me [here](https://www.researchg
 # License
 
 
-To be selected yet.
+Distributed under the GNU GPLv3 license.
 
 <br/><br/>
 
